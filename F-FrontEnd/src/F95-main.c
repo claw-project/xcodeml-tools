@@ -124,7 +124,7 @@ static void usage()
         "-fxmp                     enable XcalableMP translation.",
 	"-pgi                      keep PGI directives",
         "-fno-xmp-coarray          disable translation coarray statements to "
-        "XcalableMP subroutin calls.",
+        "XcalableMP subroutine calls.",
         "-fintrinsic-xmodules-path specify a xmod path for the intrinsic "
         "modules.",
         "-Kscope-omp               enable conditional compilation.",
@@ -151,6 +151,8 @@ static void usage()
         "-endlineno                output the endlineno attribute.", "",
         "internal options:", "-d                        enable debug mode.",
         "-no-module-cache          always load module from file.",
+        "--version                 display frontend version information."
+        "--version-tag             display frontend version tag (if any).",
 
         NULL};
     const char *const *p = usages;
@@ -160,6 +162,17 @@ static void usage()
     while (*p != NULL) {
         fprintf(stderr, "%s\n", *(p++));
     }
+}
+
+void print_version() {
+    fprintf(stderr, "%s", PACKAGE_STRING);
+    if(strlen(PACKAGE_VERSION_TAG) > 0)
+    { fprintf(stderr, " \"%s\"", PACKAGE_VERSION_TAG); }
+    fprintf(stderr, "\n");
+}
+
+void print_version_tag() {
+    fprintf(stderr, "%s", PACKAGE_VERSION_TAG);
 }
 
 int main(argc, argv) int argc;
@@ -399,6 +412,12 @@ char *argv[];
             exit(0);
         } else if (strcmp(argv[0], "-no-module-cache") == 0) {
             flag_do_module_cache = FALSE;
+        } else if (strcmp(argv[0], "--version") == 0) {
+            print_version();
+            exit(0);
+        } else if (strcmp(argv[0], "--version-tag") == 0) {
+            print_version_tag();
+            exit(0);
         } else {
             cmd_error_exit("unknown option : %s", argv[0]);
         }

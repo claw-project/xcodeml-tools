@@ -7,6 +7,34 @@ AC_CONFIG_SRCDIR([include/exc_platform.h])
 AC_CONFIG_HEADER([include/config.h Driver/atool/src/include/nata/nata_config.h])
 
 #--------------------------------------------------------------------
+# Bash function for trimming strings
+trim ()
+{
+    local var="$*"
+    # remove leading whitespace characters
+    var="${var#"${var%%[![:space:]]*}"}"
+    # remove trailing whitespace characters
+    var="${var%"${var##*[![:space:]]}"}"
+    printf '%s' "$var"
+}
+#--------------------------------------------------------------------
+
+AC_ARG_WITH(version-tag,
+	    [  --with-version-tag=<tag> Add arbitrary string tag to the xcodeml-tools version],
+		[with_version_tag_specified=yes], [with_version_tag_specified=no])
+
+if test "x${with_version_tag_specified}" = "xyes"; then
+  # Trim tag string
+  with_version_tag=$(trim "${with_version_tag}")
+else
+  with_version_tag=
+fi
+
+AC_DEFINE_UNQUOTED([PACKAGE_VERSION_TAG], ["$with_version_tag"], [String tag addition to package version])
+VERSION_TAG=$with_version_tag
+AC_SUBST(VERSION_TAG)
+
+#--------------------------------------------------------------------
 # See http://unix.stackexchange.com/questions/101080/realpath-command-not-found
 realpath ()
 {
@@ -1076,5 +1104,6 @@ AC_CONFIG_FILES(Driver/bin/Makefile)
 AC_CONFIG_FILES(Driver/bin/C_Back)
 AC_CONFIG_FILES(Driver/bin/F_Back)
 AC_CONFIG_FILES(Makefile)
+AC_CONFIG_FILES(XcodeML-Common/src/xcodeml/util/AppConstants.java)
 
 AC_OUTPUT

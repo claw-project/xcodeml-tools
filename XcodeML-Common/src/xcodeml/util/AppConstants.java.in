@@ -1,0 +1,11 @@
+package xcodeml.util;
+
+public class AppConstants
+{
+    private AppConstants() {}
+    public static final String PACKAGE_NAME = "@PACKAGE_NAME@";
+    public static final String PACKAGE_STRING = "@PACKAGE_STRING@";
+    public static final String PACKAGE_TARNAME = "@PACKAGE_TARNAME@";
+    public static final String PACKAGE_VERSION = "@PACKAGE_VERSION@";
+    public static final String PACKAGE_VERSION_TAG = "@VERSION_TAG@";
+};

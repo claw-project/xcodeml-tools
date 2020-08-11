@@ -301,6 +301,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* String tag addition to package version. */
+#undef PACKAGE_VERSION_TAG
+
 /* The size of `double', as computed by sizeof. */
 #undef SIZEOF_DOUBLE
 

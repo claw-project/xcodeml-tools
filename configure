@@ -719,6 +719,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+VERSION_TAG
 target_os
 target_vendor
 target_cpu
@@ -773,6 +774,7 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+with_version_tag
 with_native_fortran_compiler
 with_libxml2
 with_libxml2_include
@@ -1440,6 +1442,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-version-tag=<tag> Add arbitrary string tag to the xcodeml-tools version
   --without-native-fortran-compiler  Disable Fortran native compiler check
   --with-libxml2=DIR          specify prefix directory for installed libxml2 package (default: /usr)
                               Equivalent to --with-libxml2-include=PATH/include plus --with-libxml2-lib=PATH/lib64
@@ -2913,6 +2916,43 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-
 
 ac_config_headers="$ac_config_headers include/config.h Driver/atool/src/include/nata/nata_config.h"
+
+
+#--------------------------------------------------------------------
+# Bash function for trimming strings
+trim ()
+{
+    local var="$*"
+    # remove leading whitespace characters
+    var="${var#"${var%%[![:space:]]*}"}"
+    # remove trailing whitespace characters
+    var="${var%"${var##*[![:space:]]}"}"
+    printf '%s' "$var"
+}
+#--------------------------------------------------------------------
+
+
+# Check whether --with-version-tag was given.
+if test "${with_version_tag+set}" = set; then :
+  withval=$with_version_tag; with_version_tag_specified=yes
+else
+  with_version_tag_specified=no
+fi
+
+
+if test "x${with_version_tag_specified}" = "xyes"; then
+  # Trim tag string
+  with_version_tag=$(trim "${with_version_tag}")
+else
+  with_version_tag=
+fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define PACKAGE_VERSION_TAG "$with_version_tag"
+_ACEOF
+
+VERSION_TAG=$with_version_tag
 
 
 #--------------------------------------------------------------------
@@ -10042,6 +10082,8 @@ ac_config_files="$ac_config_files Driver/bin/F_Back"
 
 ac_config_files="$ac_config_files Makefile"
 
+ac_config_files="$ac_config_files XcodeML-Common/src/xcodeml/util/AppConstants.java"
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -10768,6 +10810,7 @@ do
     "Driver/bin/C_Back") CONFIG_FILES="$CONFIG_FILES Driver/bin/C_Back" ;;
     "Driver/bin/F_Back") CONFIG_FILES="$CONFIG_FILES Driver/bin/F_Back" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "XcodeML-Common/src/xcodeml/util/AppConstants.java") CONFIG_FILES="$CONFIG_FILES XcodeML-Common/src/xcodeml/util/AppConstants.java" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
