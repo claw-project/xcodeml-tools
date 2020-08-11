@@ -23,13 +23,26 @@ realpath ()
 }
 
 #--------------------------------------------------------------------
+
+AC_ARG_WITH(native-fortran-compiler,
+	    [  --without-native-fortran-compiler  Disable Fortran native compiler check ],
+		[], [with_native_fortran_compiler=yes])
+
+#--------------------------------------------------------------------
 # Save environmental variables set by user before AC_PROG_CC and so on.
 userCFLAGS=${CFLAGS}
 
 # Checks for programs.
 AC_PROG_CPP
 AC_PROG_CC
-AC_PROG_FC
+
+if test "x$with_native_fortran_compiler" = "xyes"; then
+    AC_PROG_FC
+else
+    AC_MSG_NOTICE(["fortran native compiler check disabled"])
+fi
+AC_SUBST(WITH_NATIVE_FORTRAN_COMPILER, $with_native_fortran_compiler)
+
 #AC_PROG_MAKE_SET
 AC_PROG_AWK
 AC_PROG_YACC
@@ -216,9 +229,11 @@ AC_ARG_ENABLE(atool,
   [  --enable-atool          enable atool (false default)],
   [doatool=yes], [doatool=no])
 
+if test "x$with_native_fortran_compiler" = "xyes"; then
 AC_ARG_ENABLE(mod2xmod,
   [  --enable-mod2xmod       enable to translate .mod to .xmod on only gfortran (false default)],
   [domod2xmod=yes], [domod2xmod=no])
+fi
 
 AC_ARG_ENABLE(gnu-extension,
   [  --enable-gnu-extension  enable Fortran GNU intrinsic extension (false default).],
@@ -296,6 +311,8 @@ AC_SUBST(UCHARDET_INCLUDE_DIR)
 AC_SUBST(UCHARDET_LIB_DIR)
 
 #--------------------------------------------------------------------
+if test "x$with_native_fortran_compiler" = "xyes"; then
+
 # check --enable-mod2xmod
 if test "x${target}" = "xKcomputer-linux-gnu" -o "x${target}" = "xFX10-linux-gnu" -o "x${target}" = "xFX100-linux-gnu"; then
   KIND_FORTRAN=frtpx
@@ -396,6 +413,17 @@ if test "$NEED_MAKE_MOD2XMOD" = $TRUE; then
     AC_SUBST(MPFR_LIB_DIR)
 fi
 
+else # with_native_fortran_compiler != yes
+
+NEED_MAKE_MOD2XMOD=$FALSE
+KIND_FORTRAN=none
+MOD2XMOD=$FALSE
+
+AC_SUBST(MOD2XMOD)
+AC_SUBST(KIND_FORTRAN)
+AC_SUBST(NEED_MAKE_MOD2XMOD)
+
+fi # with_native_fortran_compiler = yes
 #--------------------------------------------------------------------
 # check Perl versoin is 5
 AC_CHECK_PROG(PERL5, [perl], [perl])
