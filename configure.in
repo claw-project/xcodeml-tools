@@ -479,9 +479,35 @@ AC_SUBST(PERL5)
 #--------------------------------------------------------------------
 # check java
 
-AC_CHECK_PROG([JAVA], [java], [java])
-AC_CHECK_PROG([JAVAC], [javac], [javac])
-AC_CHECK_PROG([JAR], [jar], [jar])
+AC_ARG_WITH(java,
+	    [  --with-java=<path> Path to java executable],
+		[with_java_specified=yes], [with_java_specified=no])
+
+AC_ARG_WITH(javac,
+	    [  --with-javac=<path> Path to javac executable],
+		[with_javac_specified=yes], [with_javac_specified=no])
+
+AC_ARG_WITH(jar,
+	    [  --with-jar=<path> Path to jar executable],
+		[with_jar_specified=yes], [with_jar_specified=no])
+
+if test "x${with_java_specified}" = "xyes"; then
+    JAVA="${with_java}"
+else
+    AC_CHECK_PROG([JAVA], [java], [java])
+fi
+
+if test "x${with_javac_specified}" = "xyes"; then
+    JAVAC="${with_javac}"
+else
+    AC_CHECK_PROG([JAVAC], [javac], [javac])
+fi
+
+if test "x${with_jar_specified}" = "xyes"; then
+    JAR="${with_jar}"
+else
+    AC_CHECK_PROG([JAR], [jar], [jar])
+fi
 
 which ${JAVA} 1>/dev/null 2>/dev/null
 if test $? -ne 0; then

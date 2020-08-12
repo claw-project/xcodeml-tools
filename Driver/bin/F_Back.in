@@ -18,7 +18,9 @@ function parseParameter()
 parseParameter ${@+"$@"}
 
 if [ ${ENABLE_TEST} = false ]; then
-    OMNI_HOME=@OMNI_HOME@
+    SCRIPT="$(realpath -s $0)"
+    SCRIPT_PATH="$(dirname $SCRIPT)"
+    OMNI_HOME="${SCRIPT_PATH}/.."
     OMNI_JAR1="${OMNI_HOME}/share/om-f-back.jar"
     OMNI_JAR2="${OMNI_HOME}/share/om-common.jar"
 else

@@ -792,6 +792,9 @@ with_uchardet_lib
 enable_atool
 enable_mod2xmod
 enable_gnu_extension
+with_java
+with_javac
+with_jar
 enable_mreal
 with_precision
 '
@@ -1460,6 +1463,9 @@ Optional Packages:
                               Equivalent to --with-uchardet-include=PATH/include plus --with-uchardet-lib=PATH/lib64
   --with-uchardet-include=DIR  specify directory for installed uchardet include files
   --with-uchardet-lib=DIR      specify directory for installed uchardet library
+  --with-java=<path> Path to java executable
+  --with-javac=<path> Path to javac executable
+  --with-jar=<path> Path to jar executable
   --with-precision=NUM        the default precision of real*16 in bits (128)
 
 Some influential environment variables:
@@ -8200,7 +8206,37 @@ fi
 #--------------------------------------------------------------------
 # check java
 
-# Extract the first word of "java", so it can be a program name with args.
+
+# Check whether --with-java was given.
+if test "${with_java+set}" = set; then :
+  withval=$with_java; with_java_specified=yes
+else
+  with_java_specified=no
+fi
+
+
+
+# Check whether --with-javac was given.
+if test "${with_javac+set}" = set; then :
+  withval=$with_javac; with_javac_specified=yes
+else
+  with_javac_specified=no
+fi
+
+
+
+# Check whether --with-jar was given.
+if test "${with_jar+set}" = set; then :
+  withval=$with_jar; with_jar_specified=yes
+else
+  with_jar_specified=no
+fi
+
+
+if test "x${with_java_specified}" = "xyes"; then
+    JAVA="${with_java}"
+else
+    # Extract the first word of "java", so it can be a program name with args.
 set dummy java; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -8237,7 +8273,12 @@ $as_echo "no" >&6; }
 fi
 
 
-# Extract the first word of "javac", so it can be a program name with args.
+fi
+
+if test "x${with_javac_specified}" = "xyes"; then
+    JAVAC="${with_javac}"
+else
+    # Extract the first word of "javac", so it can be a program name with args.
 set dummy javac; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -8274,7 +8315,12 @@ $as_echo "no" >&6; }
 fi
 
 
-# Extract the first word of "jar", so it can be a program name with args.
+fi
+
+if test "x${with_jar_specified}" = "xyes"; then
+    JAR="${with_jar}"
+else
+    # Extract the first word of "jar", so it can be a program name with args.
 set dummy jar; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -8311,6 +8357,7 @@ $as_echo "no" >&6; }
 fi
 
 
+fi
 
 which ${JAVA} 1>/dev/null 2>/dev/null
 if test $? -ne 0; then
