@@ -5,6 +5,7 @@ AC_CONFIG_MACRO_DIR([./buildutils])
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([include/exc_platform.h])
 AC_CONFIG_HEADER([include/config.h Driver/atool/src/include/nata/nata_config.h])
+m4_include([./buildutils/m4_ax_compiler_vendor.m4])
 
 #--------------------------------------------------------------------
 # Bash function for trimming strings
@@ -322,13 +323,16 @@ if test "x${doatool}" = "xyes"; then
 fi
 AC_SUBST(ATOOL)
 
+AX_COMPILER_VENDOR
+CC_VENDOR="$ax_cv_c_compiler_vendor"
+
 if test "${userCFLAGS}" != ""; then
     CFLAGS="${userCFLAGS}"
-elif test "$CC" = "gcc"; then
+elif test "$CC_VENDOR" = "gnu"; then
     CFLAGS="-O2 -std=gnu99 -Wall -Wpointer-arith -fopenmp"
-elif test "$CC" = "icc"; then
+elif test "$CC_VENDOR" = "intel"; then
     CFLAGS="-O2 -qopenmp"
-elif test "$CC" = "pgcc"; then
+elif test "$CC_VENDOR" = "portland"; then
     CFLAGS="-fast -c99 -mp"
 fi
 
