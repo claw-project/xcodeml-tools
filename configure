@@ -776,6 +776,7 @@ ac_user_opts='
 enable_option_checking
 with_version_tag
 with_native_fortran_compiler
+with_force_explicit_lxml2
 with_libxml2
 with_libxml2_include
 with_libxml2_lib
@@ -1447,6 +1448,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-version-tag=<tag> Add arbitrary string tag to the xcodeml-tools version
   --without-native-fortran-compiler  Disable Fortran native compiler check
+  --with-force-explicit-lxml2 If this option is set, libxml2 MUST be located under path specified with
+	                --with-libxml2-lib. Without it default behaviour is to allow search in GCC libraries path
   --with-libxml2=DIR          specify prefix directory for installed libxml2 package (default: /usr)
                               Equivalent to --with-libxml2-include=PATH/include plus --with-libxml2-lib=PATH/lib64
   --with-libxml2-include=DIR  specify directory for installed libxml2 include files
@@ -7834,65 +7837,120 @@ TRUE=0
 
 #--------------------------------------------------------------------
 # Set options
-# specify libxmp path
+# specify libxml2 path
+
+
+# Check whether --with-force-explicit-lxml2 was given.
+if test "${with_force_explicit_lxml2+set}" = set; then :
+  withval=$with_force_explicit_lxml2; force_lxml2_path=yes
+else
+  force_lxml2_path=no
+fi
+
+
 
 # Check whether --with-libxml2 was given.
 if test "${with_libxml2+set}" = set; then :
-  withval=$with_libxml2; LIBXML2_PREFIX="${withval}"
+  withval=$with_libxml2; with_libxml2_specified=yes
 else
-  LIBXML2_PREFIX="/usr"
+  with_libxml2_specified=no
 fi
 
 
 
 # Check whether --with-libxml2-include was given.
 if test "${with_libxml2_include+set}" = set; then :
-  withval=$with_libxml2_include; LIBXML2_INCLUDE_DIR="${withval}"
+  withval=$with_libxml2_include; with_libxml2_include_specified=yes
 else
-  LIBXML2_INCLUDE_DIR="${LIBXML2_PREFIX}/include/"
+  with_libxml2_include_specified=no
 fi
 
 
 
 # Check whether --with-libxml2-lib was given.
 if test "${with_libxml2_lib+set}" = set; then :
-  withval=$with_libxml2_lib; LIBXML2_LIB_DIR="${withval}"
+  withval=$with_libxml2_lib; with_libxml2_lib_specified=yes
 else
-  LIBXML2_LIB_DIR="${LIBXML2_PREFIX}/lib64"
+  with_libxml2_lib_specified=no
 fi
 
+
+LIBXML2_INCLUDE_DIR=
+LIBXML2_LIB_DIR=
+
+if test "x${with_libxml2_specified}" = "xyes"; then
+  LIBXML2_INCLUDE_DIR="${with_libxml2}/include/libxml2"
+  LIBXML2_LIB_DIR="${with_libxml2}/lib"
+fi
+
+if test "x${with_libxml2_include_specified}" = "xyes"; then
+  LIBXML2_INCLUDE_DIR="${with_libxml2_include}"
+fi
+
+if test "x${with_libxml2_lib_specified}" = "xyes"; then
+  LIBXML2_LIB_DIR="${with_libxml2_lib}"
+fi
+
+if test "x${LIBXML2_INCLUDE_DIR}" = "x"; then
+    LIBXML2_INCLUDE_DIR="/usr/include/libxml2"
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: libxml2 include path not specified, setting to default: ${LIBXML2_INCLUDE_DIR}" >&5
+$as_echo "libxml2 include path not specified, setting to default: ${LIBXML2_INCLUDE_DIR}" >&6; }
+else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: libxml2 include path set to: ${LIBXML2_INCLUDE_DIR}" >&5
+$as_echo "libxml2 include path set to: ${LIBXML2_INCLUDE_DIR}" >&6; }
+fi
+
+if [ "x${LIBXML2_LIB_DIR}" = "x" ]; then
+    if [ "x${force_lxml2_path}" = "xyes" ]; then
+        as_fn_error $? "libxml2 library path not specified. It is mandatory due to --with-force-explicit-lxml2 " "$LINENO" 5
+    fi
+    LIBXML2_LIB_DIR="/usr/lib"
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: libxml2 lib path not specified, setting to default: ${LIBXML2_LIB_DIR}" >&5
+$as_echo "libxml2 lib path not specified, setting to default: ${LIBXML2_LIB_DIR}" >&6; }
+else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: libxml2 lib path set to: ${LIBXML2_LIB_DIR}" >&5
+$as_echo "libxml2 lib path set to: ${LIBXML2_LIB_DIR}" >&6; }
+fi
 
 # check dirs
 if ! test -d "$LIBXML2_INCLUDE_DIR"; then
-    as_fn_error $? "$LIBXML2_INCLUDE_DIR not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>." "$LINENO" 5
+    as_fn_error $? "${LIBXML2_INCLUDE_DIR} not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>." "$LINENO" 5
 fi
 
 if ! test -d "$LIBXML2_LIB_DIR"; then
-    LIBXML2_LIB_DIR=${LIBXML2_PREFIX}/lib
-fi
-
-if ! test -d "$LIBXML2_LIB_DIR"; then
-    as_fn_error $? "$LIBXML2_LIB_DIR not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>." "$LINENO" 5
+    as_fn_error $? "${LIBXML2_LIB_DIR} not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>." "$LINENO" 5
 fi
 
 # check libxml/parser.h
-tmp_file=/tmp/_omni_$$
-tmp_file_c=/tmp/_omni_$$.c
-echo "#include <libxml/parser.h>" > $tmp_file_c
-${CC} -E -I$LIBXML2_INCLUDE_DIR/libxml2 $tmp_file_c 2> /dev/null > /dev/null
+tmp_dir=$(mktemp -d -t configure-XXXXXX)
+tmp_file_c=${tmp_dir}/_omni.c
+tmp_file_c_str="#include \"${LIBXML2_INCLUDE_DIR}/libxml/xmlversion.h\"\n"
+tmp_file_c_str="${tmp_file_c_str}#ifndef LIBXML_DOTTED_VERSION\n"
+tmp_file_c_str="${tmp_file_c_str}#error \"not found\" \n"
+tmp_file_c_str="${tmp_file_c_str}#endif \n"
+tmp_file_c_str="${tmp_file_c_str}int main() {return 0;}"
+echo -e ${tmp_file_c_str} > ${tmp_file_c}
+${CC} -c -I${LIBXML2_INCLUDE_DIR} ${tmp_file_c} 2> /dev/null > /dev/null
 if test $? -ne 0; then
-    rm -f $tmp_file_c
-    as_fn_error $? "parser.h not found. Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>." "$LINENO" 5
+    as_fn_error $? "libxml/parser.h not found. Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>." "$LINENO" 5
 fi
 
 # check -lxml2
-echo "int main(){return 0;}" > $tmp_file_c
-${CC} -L$LIBXML2_LIB_DIR -lxml2 $tmp_file_c -o $tmp_file
-if test $? -ne 0; then
-    rm -f $tmp_file $tmp_file_c
-    as_fn_error $? "-lxml2 not found. Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>." "$LINENO" 5
+if [ ! -f "${LIBXML2_LIB_DIR}/libxml2.so" ]
+then
+  if [ "x${force_lxml2_path}" = "xyes" ]
+  then
+    as_fn_error $? "-lxml2 not found under ${LIBXML2_LIB_DIR} " "$LINENO" 5
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: -lxml2 not found. under ${LIBXML2_LIB_DIR}, GCC's standard search path will be used instead" >&5
+$as_echo "$as_me: WARNING: -lxml2 not found. under ${LIBXML2_LIB_DIR}, GCC's standard search path will be used instead" >&2;}
+  fi
 fi
-rm -f $tmp_file $tmp_file_c
+tmp_file=${tmp_dir}/_omni
+${CC} -I${LIBXML2_INCLUDE_DIR} -L${LIBXML2_LIB_DIR} -lxml2 $tmp_file_c -o $tmp_file 2> /dev/null > /dev/null
+if test $? -ne 0; then
+  as_fn_error $? "-lxml2 not found. Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>." "$LINENO" 5
+fi
 
 # specify mpfr path
 
