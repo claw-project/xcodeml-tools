@@ -7,10 +7,10 @@ CFLAGS  = @CFLAGS@ @EXTENSION_FLAGS@ -DNDEBUG -DBUGFIX -D__XCODEML__ -DYYDEBUG -
 LDFLAGS = -L@LIBXML2_LIB_DIR@ -lxml2 -lm
 MKDIR_P = @MKDIR_P@
 INSTALL = @INSTALL@
-BINDIR  = @OMNI_HOME@/bin
+BINDIR  = $(DESTDIR)/bin
 AWK     = @AWK@
 YACC    = @YACC@
-XMODDIR = @OMNI_HOME@/fincludes
+XMODDIR = $(DESTDIR)/fincludes
 INTRMOD = fincludes/iso_fortran_env.xmod fincludes/iso_c_binding.xmod
 
 OBJECTS = F95-main.o C-expr-mem.o C-exprcode.o F-datatype.o F-ident.o \
@@ -71,8 +71,9 @@ fincludes/iso_fortran_env.xmod: fincludes/iso_fortran_env.f90 $(F_FRONT)
 	./$(F_FRONT) -module-compile $< > $@
 
 install: $(F_FRONT)
-	$(MKDIR_P) $(DESTDIR)$(BINDIR)
-	$(INSTALL) $(F_FRONT) $(DESTDIR)$(BINDIR)
+	$(MKDIR_P) $(DESTDIR)
+	$(MKDIR_P) $(BINDIR)
+	$(INSTALL) $(F_FRONT) $(BINDIR)
 	$(MKDIR_P) $(XMODDIR)
 	$(INSTALL) $(INTRMOD) $(XMODDIR)
 

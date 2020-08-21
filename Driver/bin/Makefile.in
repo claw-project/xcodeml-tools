@@ -4,15 +4,16 @@ CC          = @CC@
 CFLAGS      = @CFLAGS@
 MKDIR_P     = @MKDIR_P@
 INSTALL     = @INSTALL@
-ETCDIR      = @OMNI_HOME@/etc/
-BINDIR      = @OMNI_HOME@/bin/
+ETCDIR      = $(DESTDIR)/etc/
+BINDIR      = $(DESTDIR)/bin/
 
 bin_SCRIPTS  = ./F_Back ./C_Back
 
 all:
 install: $(bin_SCRIPTS) 
-	$(MKDIR_P) $(DESTDIR)$(BINDIR) $(DESTDIR)$(ETCDIR)
-	$(INSTALL) $(bin_SCRIPTS) $(DESTDIR)$(BINDIR)
+	$(MKDIR_P) $(BINDIR)
+	$(MKDIR_P) $(ETCDIR)
+	$(INSTALL) $(bin_SCRIPTS) $(BINDIR)
 
 clean:
 	rm -f *.o

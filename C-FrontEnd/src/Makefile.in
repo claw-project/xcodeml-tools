@@ -5,7 +5,7 @@ CC      = @CC@
 CFLAGS  = @CFLAGS@ -I../../include/
 MKDIR_P = @MKDIR_P@
 INSTALL = @INSTALL@
-BINDIR  = @OMNI_HOME@/bin
+BINDIR  = $(DESTDIR)/bin
 PERL5   = @PERL5@
 LEX     = @LEX@
 YACC    = @YACC@
@@ -56,8 +56,9 @@ C_debugfront: $(C_Front_OBJECTS) c-dbgmain.o
 	c-xcodeml.o c-omp-xcodeml.o c-xmp-xcodeml.o c-acc-xcodeml.o
 
 install: $(C_FRONT)
-	$(MKDIR_P) $(DESTDIR)$(BINDIR)
-	$(INSTALL) $^ $(DESTDIR)$(BINDIR)
+	$(MKDIR_P) $(DESTDIR)
+	$(MKDIR_P) $(BINDIR)
+	$(INSTALL) $^ $(BINDIR)
 
 clean:
 	rm -f C_debugfront tags *.o *.log *.output
