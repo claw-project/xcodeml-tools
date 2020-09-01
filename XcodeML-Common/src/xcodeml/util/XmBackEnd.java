@@ -63,11 +63,26 @@ public class XmBackEnd
             "  -w N          set max columns to N for Fortran source code.",
             "  -d            enable debug output.",
             "  -h,--help     print this message.",
+            "  --version     display frontend version information.",
+            "  --version-tag display frontend version tag (if any)."
         };
         
         for(String line : lines) {
             System.err.println(line);
         }
+    }
+
+    private void _print_version()
+    {
+        System.err.printf("%s", AppConstants.PACKAGE_STRING);
+        if(!AppConstants.PACKAGE_VERSION_TAG.isEmpty())
+        { System.err.printf(" \"%s\"", AppConstants.PACKAGE_VERSION_TAG); }
+        System.err.printf("\n");
+    }
+
+    private void _print_version_tag()
+    {
+        System.err.printf("%s", AppConstants.PACKAGE_VERSION_TAG);
     }
 
     private boolean _openInputFile()
@@ -135,7 +150,13 @@ public class XmBackEnd
                     coarray_useStmt = true;
                 } else if(arg.equals("--help") || arg.equals("-h")) {
                     _usage();
-                    System.exit(1);
+                    System.exit(0);
+                } else if(arg.equals("--version")) {
+                    _print_version();
+                    System.exit(0);
+                } else if(arg.equals("--version-tag")) {
+                    _print_version_tag();
+                    System.exit(0);
                 } else {
                     _error("Unknown option " + arg + ".");
                 }

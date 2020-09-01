@@ -1,10 +1,15 @@
 .PHONY: all install clean distclean test
 
+ifndef DESTDIR
+    DESTDIR=@OMNI_HOME@
+endif
+
 INSTALL=@INSTALL@
-BINDIR=@OMNI_HOME@/bin
+BINDIR=$(DESTDIR)/bin
 T_FJMODULE=@T_FJMODULE@
 T_FJMODULE_REMOTE=http://omni-compiler.org/T_FJModule/20170523
 T_FJMODULE_LOCAL=T_FJModule
+WITH_NATIVE_FORTRAN_COMPILER=@WITH_NATIVE_FORTRAN_COMPILER@
 
 SUBDIRS=C-FrontEnd/src F-FrontEnd/src XcodeML-Common C-BackEnd F-BackEnd Driver/bin
 
@@ -27,18 +32,22 @@ all:
 	done
 
 test: all
-	cd F-FrontEnd/src && bash ./compile_all_test.sh
+	@if [ $(WITH_NATIVE_FORTRAN_COMPILER) = "yes" ]; then\
+		cd F-FrontEnd/src && bash ./compile_all_test.sh;\
+	else\
+	    echo "Fortran tests disabled because of --without-native-fortran-compiler";\
+	fi
 	cd test/C99; make clean; make CC=$(CC)
 
 install:
 	@for subdir in $(SUBDIRS) ; do \
-	  $(MAKE) -C $$subdir install ; \
+	  $(MAKE) DESTDIR=$(DESTDIR) -C $$subdir install ; \
 	  if test $$? -ne 0; then exit 1; fi ; \
 	done; \
 	if test $(T_FJMODULE) -eq $(TRUE); then \
-	  wget $(T_FJMODULE_REMOTE) -O $(DESTDIR)$(BINDIR)/$(T_FJMODULE_LOCAL) || \
-	  echo "Please download $(T_FJMODULE_REMOTE) and copy it at $(DESTDIR)$(BINDIR)/$(T_FJMODULE_LOCAL)"; \
-	  chmod +x $(DESTDIR)$(BINDIR)/$(T_FJMODULE_LOCAL); \
+	  wget $(T_FJMODULE_REMOTE) -O $(BINDIR)/$(T_FJMODULE_LOCAL) || \
+	  echo "Please download $(T_FJMODULE_REMOTE) and copy it at $(BINDIR)/$(T_FJMODULE_LOCAL)"; \
+	  chmod +x $(BINDIR)/$(T_FJMODULE_LOCAL); \
 	fi
 
 clean:

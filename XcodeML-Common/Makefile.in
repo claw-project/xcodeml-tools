@@ -4,7 +4,7 @@ JAVAC     = @JAVAC@
 JAVAC_OPT = @JAVAC_OPT@
 JAR       = @JAR@
 JAR_OPT   = @JAR_OPT@
-JAVADIR   = @OMNI_HOME@/share/
+JAVADIR   = $(DESTDIR)/share/
 MKDIR_P   = @MKDIR_P@
 INSTALL   = @INSTALL@
 INSTALL   = install
@@ -22,5 +22,6 @@ clean:
 	rm -f $(OM_COMMON) src/xcodeml/*.class src/xcodeml/*/*.class
 
 install: $(OM_COMMON)
-	$(MKDIR_P) $(DESTDIR)$(JAVADIR)
-	$(INSTALL) $^ $(DESTDIR)$(JAVADIR)
+	$(MKDIR_P) $(DESTDIR)
+	$(MKDIR_P) $(JAVADIR)
+	$(INSTALL) $^ $(JAVADIR)

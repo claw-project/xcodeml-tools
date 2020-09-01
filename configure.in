@@ -5,6 +5,35 @@ AC_CONFIG_MACRO_DIR([./buildutils])
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([include/exc_platform.h])
 AC_CONFIG_HEADER([include/config.h Driver/atool/src/include/nata/nata_config.h])
+m4_include([./buildutils/m4_ax_compiler_vendor.m4])
+
+#--------------------------------------------------------------------
+# Bash function for trimming strings
+trim ()
+{
+    local var="$*"
+    # remove leading whitespace characters
+    var="${var#"${var%%[![:space:]]*}"}"
+    # remove trailing whitespace characters
+    var="${var%"${var##*[![:space:]]}"}"
+    printf '%s' "$var"
+}
+#--------------------------------------------------------------------
+
+AC_ARG_WITH(version-tag,
+	    [  --with-version-tag=<tag> Add arbitrary string tag to the xcodeml-tools version],
+		[with_version_tag_specified=yes], [with_version_tag_specified=no])
+
+if test "x${with_version_tag_specified}" = "xyes"; then
+  # Trim tag string
+  with_version_tag=$(trim "${with_version_tag}")
+else
+  with_version_tag=
+fi
+
+AC_DEFINE_UNQUOTED([PACKAGE_VERSION_TAG], ["$with_version_tag"], [String tag addition to package version])
+VERSION_TAG=$with_version_tag
+AC_SUBST(VERSION_TAG)
 
 #--------------------------------------------------------------------
 # See http://unix.stackexchange.com/questions/101080/realpath-command-not-found
@@ -23,13 +52,26 @@ realpath ()
 }
 
 #--------------------------------------------------------------------
+
+AC_ARG_WITH(native-fortran-compiler,
+	    [  --without-native-fortran-compiler  Disable Fortran native compiler check ],
+		[], [with_native_fortran_compiler=yes])
+
+#--------------------------------------------------------------------
 # Save environmental variables set by user before AC_PROG_CC and so on.
 userCFLAGS=${CFLAGS}
 
 # Checks for programs.
 AC_PROG_CPP
 AC_PROG_CC
-AC_PROG_FC
+
+if test "x$with_native_fortran_compiler" = "xyes"; then
+    AC_PROG_FC
+else
+    AC_MSG_NOTICE(["fortran native compiler check disabled"])
+fi
+AC_SUBST(WITH_NATIVE_FORTRAN_COMPILER, $with_native_fortran_compiler)
+
 #AC_PROG_MAKE_SET
 AC_PROG_AWK
 AC_PROG_YACC
@@ -114,51 +156,97 @@ TRUE=0
 
 #--------------------------------------------------------------------
 # Set options
-# specify libxmp path
+# specify libxml2 path
+
+AC_ARG_WITH(force-explicit-lxml2,
+	    [  --with-force-explicit-lxml2 If this option is set, libxml2 MUST be located under path specified with
+	                --with-libxml2-lib. Without it default behaviour is to allow search in GCC libraries path  ],
+		[force_lxml2_path=yes], [force_lxml2_path=no])
+
 AC_ARG_WITH(libxml2,
 	    [  --with-libxml2=DIR          specify prefix directory for installed libxml2 package (default: /usr)
                               Equivalent to --with-libxml2-include=PATH/include plus --with-libxml2-lib=PATH/lib64],
-			      [LIBXML2_PREFIX="${withval}"], [LIBXML2_PREFIX="/usr"])
+			      [with_libxml2_specified=yes], [with_libxml2_specified=no])
 
 AC_ARG_WITH(libxml2-include,
 	    [  --with-libxml2-include=DIR  specify directory for installed libxml2 include files],
-	    [LIBXML2_INCLUDE_DIR="${withval}"], [LIBXML2_INCLUDE_DIR="${LIBXML2_PREFIX}/include/"])
+	    [with_libxml2_include_specified=yes], [with_libxml2_include_specified=no])
 
 AC_ARG_WITH(libxml2-lib,
-	    [  --with-libxml2-lib=DIR      specify directory for installed libxml2 library],
-	    [LIBXML2_LIB_DIR="${withval}"], [LIBXML2_LIB_DIR="${LIBXML2_PREFIX}/lib64"])
+        [  --with-libxml2-lib=DIR      specify directory for installed libxml2 library],
+        [with_libxml2_lib_specified=yes], [with_libxml2_lib_specified=no])
+
+LIBXML2_INCLUDE_DIR=
+LIBXML2_LIB_DIR=
+
+if test "x${with_libxml2_specified}" = "xyes"; then
+  LIBXML2_INCLUDE_DIR="${with_libxml2}/include/libxml2"
+  LIBXML2_LIB_DIR="${with_libxml2}/lib"
+fi
+
+if test "x${with_libxml2_include_specified}" = "xyes"; then
+  LIBXML2_INCLUDE_DIR="${with_libxml2_include}"
+fi
+
+if test "x${with_libxml2_lib_specified}" = "xyes"; then
+  LIBXML2_LIB_DIR="${with_libxml2_lib}"
+fi
+
+if test "x${LIBXML2_INCLUDE_DIR}" = "x"; then
+    LIBXML2_INCLUDE_DIR="/usr/include/libxml2"
+    AC_MSG_RESULT([libxml2 include path not specified, setting to default: ${LIBXML2_INCLUDE_DIR}])
+else
+    AC_MSG_RESULT([libxml2 include path set to: ${LIBXML2_INCLUDE_DIR}])
+fi
+
+if [[ "x${LIBXML2_LIB_DIR}" = "x" ]]; then
+    if [[ "x${force_lxml2_path}" = "xyes" ]]; then
+        AC_MSG_ERROR([libxml2 library path not specified. It is mandatory due to --with-force-explicit-lxml2 ])
+    fi
+    LIBXML2_LIB_DIR="/usr/lib"
+    AC_MSG_RESULT([libxml2 lib path not specified, setting to default: ${LIBXML2_LIB_DIR}])
+else
+    AC_MSG_RESULT([libxml2 lib path set to: ${LIBXML2_LIB_DIR}])
+fi
 
 # check dirs
 if ! test -d "$LIBXML2_INCLUDE_DIR"; then
-    AC_MSG_ERROR([$LIBXML2_INCLUDE_DIR not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>.])
+    AC_MSG_ERROR([${LIBXML2_INCLUDE_DIR} not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>.])
 fi
 
 if ! test -d "$LIBXML2_LIB_DIR"; then
-    LIBXML2_LIB_DIR=${LIBXML2_PREFIX}/lib
-fi
-
-if ! test -d "$LIBXML2_LIB_DIR"; then
-    AC_MSG_ERROR([$LIBXML2_LIB_DIR not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>.])
+    AC_MSG_ERROR([${LIBXML2_LIB_DIR} not found.  Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>.])
 fi
 
 # check libxml/parser.h
-tmp_file=/tmp/_omni_$$
-tmp_file_c=/tmp/_omni_$$.c
-echo "#include <libxml/parser.h>" > $tmp_file_c
-${CC} -E -I$LIBXML2_INCLUDE_DIR/libxml2 $tmp_file_c 2> /dev/null > /dev/null
+tmp_dir=$(mktemp -d -t configure-XXXXXX)
+tmp_file_c=${tmp_dir}/_omni.c
+tmp_file_c_str="#include \"${LIBXML2_INCLUDE_DIR}/libxml/xmlversion.h\"\n"
+tmp_file_c_str="${tmp_file_c_str}#ifndef LIBXML_DOTTED_VERSION\n"
+tmp_file_c_str="${tmp_file_c_str}#error \"not found\" \n"
+tmp_file_c_str="${tmp_file_c_str}#endif \n"
+tmp_file_c_str="${tmp_file_c_str}int main() {return 0;}"
+echo -e ${tmp_file_c_str} > ${tmp_file_c}
+${CC} -c -I${LIBXML2_INCLUDE_DIR} ${tmp_file_c} 2> /dev/null > /dev/null
 if test $? -ne 0; then
-    rm -f $tmp_file_c
-    AC_MSG_ERROR([parser.h not found. Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>.])
+    AC_MSG_ERROR([libxml/parser.h not found. Please attach --with-libxml2=<DIR> or --with-libxml2-include=<DIR>.])
 fi
 
 # check -lxml2
-echo "int main(){return 0;}" > $tmp_file_c
-${CC} -L$LIBXML2_LIB_DIR -lxml2 $tmp_file_c -o $tmp_file
-if test $? -ne 0; then
-    rm -f $tmp_file $tmp_file_c
-    AC_MSG_ERROR([-lxml2 not found. Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>.])
+if [[ ! -f "${LIBXML2_LIB_DIR}/libxml2.so" ]]
+then
+  if [[ "x${force_lxml2_path}" = "xyes" ]]
+  then
+    AC_MSG_ERROR([-lxml2 not found under ${LIBXML2_LIB_DIR} ])
+  else
+    AC_MSG_WARN([-lxml2 not found. under ${LIBXML2_LIB_DIR}, GCC's standard search path will be used instead])
+  fi
 fi
-rm -f $tmp_file $tmp_file_c
+tmp_file=${tmp_dir}/_omni
+${CC} -I${LIBXML2_INCLUDE_DIR} -L${LIBXML2_LIB_DIR} -lxml2 $tmp_file_c -o $tmp_file 2> /dev/null > /dev/null
+if test $? -ne 0; then
+  AC_MSG_ERROR([-lxml2 not found. Please attach --with-libxml2=<DIR> or --with-libxml2-lib=<DIR>.])
+fi
 
 # specify mpfr path
 AC_ARG_WITH(mpfr,
@@ -216,9 +304,11 @@ AC_ARG_ENABLE(atool,
   [  --enable-atool          enable atool (false default)],
   [doatool=yes], [doatool=no])
 
+if test "x$with_native_fortran_compiler" = "xyes"; then
 AC_ARG_ENABLE(mod2xmod,
   [  --enable-mod2xmod       enable to translate .mod to .xmod on only gfortran (false default)],
   [domod2xmod=yes], [domod2xmod=no])
+fi
 
 AC_ARG_ENABLE(gnu-extension,
   [  --enable-gnu-extension  enable Fortran GNU intrinsic extension (false default).],
@@ -279,13 +369,16 @@ if test "x${doatool}" = "xyes"; then
 fi
 AC_SUBST(ATOOL)
 
+AX_COMPILER_VENDOR
+CC_VENDOR="$ax_cv_c_compiler_vendor"
+
 if test "${userCFLAGS}" != ""; then
     CFLAGS="${userCFLAGS}"
-elif test "$CC" = "gcc"; then
+elif test "$CC_VENDOR" = "gnu"; then
     CFLAGS="-O2 -std=gnu99 -Wall -Wpointer-arith -fopenmp"
-elif test "$CC" = "icc"; then
+elif test "$CC_VENDOR" = "intel"; then
     CFLAGS="-O2 -qopenmp"
-elif test "$CC" = "pgcc"; then
+elif test "$CC_VENDOR" = "portland"; then
     CFLAGS="-fast -c99 -mp"
 fi
 
@@ -296,6 +389,8 @@ AC_SUBST(UCHARDET_INCLUDE_DIR)
 AC_SUBST(UCHARDET_LIB_DIR)
 
 #--------------------------------------------------------------------
+if test "x$with_native_fortran_compiler" = "xyes"; then
+
 # check --enable-mod2xmod
 if test "x${target}" = "xKcomputer-linux-gnu" -o "x${target}" = "xFX10-linux-gnu" -o "x${target}" = "xFX100-linux-gnu"; then
   KIND_FORTRAN=frtpx
@@ -396,6 +491,17 @@ if test "$NEED_MAKE_MOD2XMOD" = $TRUE; then
     AC_SUBST(MPFR_LIB_DIR)
 fi
 
+else # with_native_fortran_compiler != yes
+
+NEED_MAKE_MOD2XMOD=$FALSE
+KIND_FORTRAN=none
+MOD2XMOD=$FALSE
+
+AC_SUBST(MOD2XMOD)
+AC_SUBST(KIND_FORTRAN)
+AC_SUBST(NEED_MAKE_MOD2XMOD)
+
+fi # with_native_fortran_compiler = yes
 #--------------------------------------------------------------------
 # check Perl versoin is 5
 AC_CHECK_PROG(PERL5, [perl], [perl])
@@ -423,9 +529,35 @@ AC_SUBST(PERL5)
 #--------------------------------------------------------------------
 # check java
 
-AC_CHECK_PROG([JAVA], [java], [java])
-AC_CHECK_PROG([JAVAC], [javac], [javac])
-AC_CHECK_PROG([JAR], [jar], [jar])
+AC_ARG_WITH(java,
+	    [  --with-java=<path> Path to java executable],
+		[with_java_specified=yes], [with_java_specified=no])
+
+AC_ARG_WITH(javac,
+	    [  --with-javac=<path> Path to javac executable],
+		[with_javac_specified=yes], [with_javac_specified=no])
+
+AC_ARG_WITH(jar,
+	    [  --with-jar=<path> Path to jar executable],
+		[with_jar_specified=yes], [with_jar_specified=no])
+
+if test "x${with_java_specified}" = "xyes"; then
+    JAVA="${with_java}"
+else
+    AC_CHECK_PROG([JAVA], [java], [java])
+fi
+
+if test "x${with_javac_specified}" = "xyes"; then
+    JAVAC="${with_javac}"
+else
+    AC_CHECK_PROG([JAVAC], [javac], [javac])
+fi
+
+if test "x${with_jar_specified}" = "xyes"; then
+    JAR="${with_jar}"
+else
+    AC_CHECK_PROG([JAR], [jar], [jar])
+fi
 
 which ${JAVA} 1>/dev/null 2>/dev/null
 if test $? -ne 0; then
@@ -1048,5 +1180,6 @@ AC_CONFIG_FILES(Driver/bin/Makefile)
 AC_CONFIG_FILES(Driver/bin/C_Back)
 AC_CONFIG_FILES(Driver/bin/F_Back)
 AC_CONFIG_FILES(Makefile)
+AC_CONFIG_FILES(XcodeML-Common/src/xcodeml/util/AppConstants.java)
 
 AC_OUTPUT
