@@ -23,7 +23,7 @@ public class XmBackEnd
     private BufferedReader _reader;
     private String _inputFilePath;
     private XmToolFactory _toolFactory;
-    private IXmOption _xmOption;
+    private final IXmOption _xmOption;
 
     /**
      * @deprecated Not thread-safe.
@@ -31,15 +31,11 @@ public class XmBackEnd
     @Deprecated
     public XmBackEnd(String langId, String commandName) throws XmException
     {
-        initialize(langId, commandName, new XmOptionStatic());
+        this(langId, commandName, new XmOptionStatic());
     }
 
     public XmBackEnd(String langId, String commandName, IXmOption xmOption) throws XmException
     {
-        initialize(langId, commandName, xmOption);
-    }
-
-    void initialize(String langId, String commandName, IXmOption xmOption) throws XmException {
         _commandName = commandName;
         _toolFactory = new XmToolFactory(langId);
         _xmOption = xmOption;
@@ -224,8 +220,7 @@ public class XmBackEnd
             }
 
             XmDecompiler decompiler = _toolFactory.createDecompiler();
-            IXmOption xmOption = new XmOptionLocal();
-            XmDecompilerContext context = _toolFactory.createDecompilerContext(xmOption);
+            XmDecompilerContext context = _toolFactory.createDecompilerContext(_xmOption);
             
             if(maxColumns > 0) {
                 context.setProperty(XmDecompilerContext.KEY_MAX_COLUMNS, "" + maxColumns);
