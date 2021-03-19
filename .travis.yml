@@ -21,7 +21,7 @@ matrix:
 before_install:
 - sudo apt-get update
 - sudo apt-get install python3
-- before_script:
+before_script:
 - export FC=$FC_COMPILER
 - export CC=$CC_COMPILER
 - export CXX=$CXX_COMPILER
