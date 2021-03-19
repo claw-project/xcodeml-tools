@@ -1,3 +1,4 @@
+sudo: required
 language: cpp
 dist: xenial
 matrix:
@@ -17,12 +18,15 @@ matrix:
         - gcc-7
         - g++-7
         - gfortran-7
-before_script:
+before_install:
+- sudo apt-get update
+- sudo apt-get install python3
+- before_script:
 - export FC=$FC_COMPILER
 - export CC=$CC_COMPILER
 - export CXX=$CXX_COMPILER
 script:
-- ./configure && make && make test
+- echo "Testing out-of-source cmake build"
 - export OMNI_SRC=$(pwd)
 - export OMNI_BUILD=${HOME}/omni-build
 - export OMNI_INSTALL=${HOME}/omni-install
@@ -34,3 +38,5 @@ script:
 - make install
 - make -j test-ffront-c
 - make -j test-ffront-cpp
+- echo "Testing in-source GNU Make build"
+- ./configure && make && make test
