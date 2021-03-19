@@ -33,7 +33,7 @@ script:
 - mkdir ${OMNI_BUILD}
 - mkdir ${OMNI_INSTALL}
 - cd ${OMNI_BUILD}
-- cmake -S ${OMNI_SRC} -DCMAKE_INSTALL_PREFIX=${OMNI_INSTALL}
+- cmake -S ${OMNI_SRC} -DCMAKE_INSTALL_PREFIX=${OMNI_INSTALL} -DPython3_EXECUTABLE=$(which python3)
 - make -j
 - make install
 - make -j test-ffront-c

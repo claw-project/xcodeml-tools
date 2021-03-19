@@ -117,7 +117,7 @@ add_subdirectory(Driver/bin)
 add_custom_target(build-c-install DEPENDS ffront om-f-back fback-driver std-lib-xmods)
 add_custom_target(build-cpp-install DEPENDS ffront-cpp om-f-back fback-driver std-lib-xmods)
 
-find_package(Python3 3.6)
+find_package(Python3 3.6 COMPONENTS Interpreter)
 
 if(${Python3_FOUND})
   set(TEST_FFRONT_C_WORKING_DIR ${CMAKE_BINARY_DIR}/tests/ffront-c)
