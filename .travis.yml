@@ -1,6 +1,6 @@
 sudo: required
 language: cpp
-dist: xenial
+dist: bionic
 matrix:
   include:
   - compiler: gcc
